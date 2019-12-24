@@ -21,7 +21,6 @@ namespace Unity.UIWidgets.Movin {
     }
 
     public class Movin {
-        public GameObject container;
         public Transform transform;
 
         public BodymovinContent content;
@@ -49,10 +48,8 @@ namespace Unity.UIWidgets.Movin {
 
 
         public Movin(Transform parent, string path, int sort = 0, float scale = 1f, float strokeWidth = 0.5f, bool loop = true) {
+            transform = new RectTransform();
             transform.SetParent(parent, false);
-
-            container = new GameObject();
-            container.transform.SetParent(transform, false);
 
             MovinInit(path, sort, scale, strokeWidth);
         }
@@ -60,8 +57,6 @@ namespace Unity.UIWidgets.Movin {
 
         private void MovinInit(string path, int sort = 0, float scale = 1f, float strokeWidth = 0.5f) {
             scale *= 0.1f; // Reduce default scale
-
-            container.name = "container - " + path;
 
             this.sort = sort;
             this.scale = scale;
@@ -74,8 +69,8 @@ namespace Unity.UIWidgets.Movin {
                 return;
             }
 
-            container.transform.localScale = Vector3.one * this.scale;
-            container.transform.localPosition -= new Vector3(content.w / 2, -(content.h / 2), 0) * scale;
+            transform.localScale = Vector3.one * this.scale;
+            transform.localPosition -= new Vector3(content.w / 2, -(content.h / 2), 0) * scale;
 
             frameRate = content.fr;
             totalFrames = content.op;

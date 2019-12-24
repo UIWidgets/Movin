@@ -36,7 +36,7 @@ namespace Unity.UIWidgets.Movin {
             content = layer;
             this.sort = sort;
 
-            transform.SetParent(movin.container.transform, false);
+            transform.SetParent(movin.transform, false);
 
             positionOffset = content.positionOffset;
 
