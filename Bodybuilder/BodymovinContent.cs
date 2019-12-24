@@ -1,7 +1,7 @@
 ﻿using SimpleJSON;
 using UnityEngine;
 
-namespace u.movin {
+namespace Unity.UIWidgets.Movin {
     public struct BodymovinContent {
         public string v;
         public float fr;

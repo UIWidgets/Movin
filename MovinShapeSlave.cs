@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace u.movin {
+namespace Unity.UIWidgets.Movin {
     public class MovinShapeSlave : MovinShape {
         public MovinShape master;
         public BodymovinShapePath path;
@@ -27,19 +27,9 @@ namespace u.movin {
 
             /* GAMEOBJECT */
 
-            gameObject = new GameObject(master.content.item.ty + " pts: " + points.Length + "  closed: " + closed);
+            transform = new RectTransform();
             transform.SetParent(parent, false);
             transform.localPosition = master.transform.localPosition;
-
-            mesh = new Mesh();
-            filter = gameObject.AddComponent<MeshFilter>();
-            filter.mesh = mesh;
-
-            renderer = gameObject.AddComponent<MeshRenderer>();
-            renderer.material = master.renderer.material;
-
-            sorting = gameObject.AddComponent<SortingGroup>();
-            sorting.sortingOrder = master.sorting.sortingOrder;
 
 
             /* SETUP VECTOR */

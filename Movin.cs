@@ -1,10 +1,10 @@
 ﻿using System;
-using u.movin;
+using Unity.UIWidgets.Movin;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
-namespace u.movin {
+namespace Unity.UIWidgets.Movin {
     public struct MotionProps {
         public int key; // Current keyframe
         public int keys; // Total keyframes
@@ -19,289 +19,144 @@ namespace u.movin {
         public Vector3 startValue;
         public Vector3 endValue;
     }
-}
+
+    public class Movin {
+        public GameObject container;
+        public Transform transform;
+
+        public BodymovinContent content;
+        private MovinLayer[] layers;
+        private MovinLayer[] layersByIndex;
+
+        public float scale;
+        public float frameRate = 0;
+        public float totalFrames = 0;
+        public float frame = 0; // Animation frame
+
+        public float strokeWidth;
+        public int sort;
 
 
-public class Movin {
-    public GameObject gameObject;
-    public GameObject container;
-    public Transform transform => gameObject.transform;
+        /* ---- BLENDING ---- */
 
-    public BodymovinContent content;
-    private MovinLayer[] layers;
-    private MovinLayer[] layersByIndex;
+        public bool blending = false;
+        public BodymovinContent blendContent;
+        public string blendPath;
 
-    public float scale;
-    public bool playing = false;
-    public bool paused = false;
-    public float frameRate = 0;
-    public float totalFrames = 0;
+        /* ---- EVENTS ---- */
 
-    public float time = 0; // Local time (since animation began)
-    public float frame = 0; // Animation frame
-    public bool loop;
-    public bool complete = false;
-    public float quality;
-
-    public float strokeWidth;
-    public int sort;
+        public Action OnComplete;
 
 
-    /* ---- BLENDING ---- */
+        public Movin(Transform parent, string path, int sort = 0, float scale = 1f, float strokeWidth = 0.5f, bool loop = true) {
+            transform.SetParent(parent, false);
 
-    public bool blending = false;
-    public BodymovinContent blendContent;
-    public string blendPath;
+            container = new GameObject();
+            container.transform.SetParent(transform, false);
 
-    /* ---- EVENTS ---- */
-
-    public Action OnComplete;
-
-
-    public Movin(Transform parent, string path, int sort = 0, float scale = 1f, float strokeWidth = 0.5f,
-        bool loop = true, float quality = 0.4f) {
-        gameObject = new GameObject();
-        transform.SetParent(parent, false);
-
-        container = new GameObject();
-        container.transform.SetParent(transform, false);
-
-        MovinInit(path, sort, scale, strokeWidth, loop, quality);
-    }
-
-
-    private void MovinInit(string path, int sort = 0, float scale = 1f, float strokeWidth = 0.5f, bool loop = true,
-        float quality = 0.4f) {
-        scale *= 0.1f; // Reduce default scale
-
-        gameObject.name = "body - " + path;
-        container.name = "container - " + path;
-
-        this.loop = loop;
-        this.sort = sort;
-        this.scale = scale;
-        this.strokeWidth = strokeWidth;
-
-        content = BodymovinContent.init(path);
-
-        if (content.layers == null || content.layers.Length <= 0) {
-            Debug.Log(">>>>  NO CONTENT LAYERS, ABORT!  <<<<");
-            return;
-        }
-
-        container.transform.localScale = Vector3.one * this.scale;
-        container.transform.localPosition -= new Vector3(content.w / 2, -(content.h / 2), 0) * scale;
-
-        frameRate = content.fr;
-        totalFrames = content.op;
-        layers = new MovinLayer[content.layers.Length];
-
-
-        /* ----- CREATE LAYERS ----- */
-
-        layersByIndex = new MovinLayer[content.highestLayerIndex + 1];
-
-        for (int i = 0; i < content.layers.Length; i++) {
-            MovinLayer layer = new MovinLayer(this, content.layers[i], content.layers.Length - i);
-
-            layers[i] = layer;
-            layersByIndex[layer.content.ind] = layers[i];
+            MovinInit(path, sort, scale, strokeWidth);
         }
 
 
-        /* ----- SET PARENTS ----- */
+        private void MovinInit(string path, int sort = 0, float scale = 1f, float strokeWidth = 0.5f) {
+            scale *= 0.1f; // Reduce default scale
 
-        for (int i = 0; i < layers.Length; i++) {
-            MovinLayer layer = layers[i];
-            int p = layer.content.parent;
-            if (p <= 0) continue;
+            container.name = "container - " + path;
 
-            layer.transform.SetParent(
-                layersByIndex[p].content.shapes.Length > 0
-                    ? layersByIndex[p].transform.GetChild(0)
-                    : layersByIndex[p].transform, false);
-        }
-    }
+            this.sort = sort;
+            this.scale = scale;
+            this.strokeWidth = strokeWidth;
 
+            content = BodymovinContent.init(path);
 
-    private void Update() {
-        if (!playing) return;
-
-        time += Time.deltaTime;
-        frame = time * frameRate;
-
-        //Debug.Log("t:  " + time);
-
-        if (frame >= totalFrames) {
-            Stop();
-
-            //Debug.Log("****** COMP Animation done! ******");
-            complete = !loop;
-            OnComplete?.Invoke();
-
-            if (blending) {
-                blending = false;
-                UpdateLayersWithContent(blendContent, blendPath);
+            if (content.layers == null || content.layers.Length <= 0) {
+                Debug.Log(">>>>  NO CONTENT LAYERS, ABORT!  <<<<");
+                return;
             }
 
-            if (loop) {
-                ResetKeyframes();
-                Play();
+            container.transform.localScale = Vector3.one * this.scale;
+            container.transform.localPosition -= new Vector3(content.w / 2, -(content.h / 2), 0) * scale;
+
+            frameRate = content.fr;
+            totalFrames = content.op;
+            layers = new MovinLayer[content.layers.Length];
+
+
+            /* ----- CREATE LAYERS ----- */
+
+            layersByIndex = new MovinLayer[content.highestLayerIndex + 1];
+
+            for (int i = 0; i < content.layers.Length; i++) {
+                MovinLayer layer = new MovinLayer(this, content.layers[i], content.layers.Length - i);
+
+                layers[i] = layer;
+                layersByIndex[layer.content.ind] = layers[i];
             }
 
-            return;
+
+            /* ----- SET PARENTS ----- */
+
+            for (int i = 0; i < layers.Length; i++) {
+                MovinLayer layer = layers[i];
+                int p = layer.content.parent;
+                if (p <= 0) continue;
+
+                layer.transform.SetParent(
+                    layersByIndex[p].content.shapes.Length > 0
+                        ? layersByIndex[p].transform.GetChild(0)
+                        : layersByIndex[p].transform, false);
+            }
         }
 
-        UpdateLayers();
-    }
 
-    public void UpdateLayers() {
-        for (int i = 0; i < layers.Length; i++) {
-            float f = frame - layers[i].content.startTime;
-            layers[i].Update(f);
-        }
-    }
+        private void Update(float time) {
+            frame = time * frameRate;
 
+            //Debug.Log("t:  " + time);
 
-    private void ResetKeyframes() {
-        time = 0;
+            if (frame >= totalFrames) {
+                return;
+            }
 
-        for (int i = 0; i < layers.Length; i++) layers[i].ResetKeyframes();
-    }
-
-
-    /* ------ PUBLIC METHODS ------ */
-
-
-    public void SetColor(Color c, bool fill = true, bool stroke = false) {
-        for (int i = 0; i < layers.Length; i++)
-        for (int j = 0; j < layers[i].shapes.Length; j++) {
-            MovinShape s = layers[i].shapes[j];
-
-            if (fill)
-                s.UpdateFillColor(c);
-
-            if (stroke)
-                s.UpdateStrokeColor(c);
-        }
-    }
-
-    public void SetOpacity(float o) {
-        for (int i = 0; i < layers.Length; i++)
-        for (int j = 0; j < layers[i].shapes.Length; j++) {
-            MovinShape s = layers[i].shapes[j];
-            s.UpdateOpacity(o * 100f);
-        }
-    }
-
-    public void RandomFrame(bool play = false) {
-        int n = Random.Range(0, (int) totalFrames);
-        SetFrame(n, play);
-    }
-
-    public void SetFrame(int n = 0, bool play = false) {
-        frame = Mathf.Clamp(n, 0, totalFrames);
-        time = frame / frameRate;
-
-        UpdateLayers();
-
-        if (play) playing = true;
-    }
-
-    public Transform FindLayer(string n) {
-        for (int i = 0; i < layers.Length; i++)
-            if (n == layers[i].content.nm)
-                return layers[i].transform;
-        return null;
-    }
-
-
-    public void Play() {
-        if (complete) {
-            complete = false;
-            ResetKeyframes();
+            UpdateLayers();
         }
 
-        playing = true;
-        paused = false;
-    }
-
-    public void Pause() {
-        playing = false;
-        paused = true;
-    }
-
-    public void Stop() {
-        playing = false;
-        paused = false;
-    }
+        public void UpdateLayers() {
+            for (int i = 0; i < layers.Length; i++) {
+                float f = frame - layers[i].content.startTime;
+                layers[i].Update(f);
+            }
+        }
 
 
-    public void Blend(string path, float duration = 30f, Vector2[] ease = null) {
-        BodymovinContent blend = BodymovinContent.init(path);
-
-        loop = false;
-        totalFrames = duration;
-
-        time = 0;
-        frame = 0;
-
-        blending = true;
-        blendPath = path;
-        blendContent = blend;
-
-        if (ease == null) ease = Ease.StrongOut;
-
-        for (int i = 0; i < layers.Length; i++) layers[i].CreateBlendKeyframe(blend.layers[i], duration, ease);
-
-        Play();
-    }
+        private void ResetKeyframes() {
+            frame = 0;
+            for (int i = 0; i < layers.Length; i++) layers[i].ResetKeyframes();
+        }
 
 
-    /*  DESTROY AND REPLACE CONTENTS  */
+        /* ------ PUBLIC METHODS ------ */
 
 
-    public void ClearContent() {
-        if (container == null) return;
+        public void SetColor(Color c, bool fill = true, bool stroke = false) {
+            for (int i = 0; i < layers.Length; i++)
+            for (int j = 0; j < layers[i].shapes.Length; j++) {
+                MovinShape s = layers[i].shapes[j];
 
-        for (int i = 0; i < container.transform.childCount; i++)
-            if (Application.isPlaying)
-                Object.Destroy(container.transform.GetChild(i).gameObject);
-            else
-                Object.DestroyImmediate(container.transform.GetChild(i).gameObject);
-    }
+                if (fill)
+                    s.UpdateFillColor(c);
 
-    public void ChangeContent(string path, int sort = 0, float scale = 1f, float strokeWidth = 0.5f, bool loop = true,
-        float quality = 0.4f) {
-        ClearContent();
-        MovinInit(path, sort, scale, strokeWidth, loop, quality);
-    }
+                if (stroke)
+                    s.UpdateStrokeColor(c);
+            }
+        }
 
-
-    /*  REPLACE EXISTING LAYER CONTENT WITH NEW DATA  */
-
-
-    public void UpdateLayersWithContent(string path) {
-        UpdateLayersWithContent(BodymovinContent.init(path), path);
-    }
-
-    public void UpdateLayersWithContent(BodymovinContent c, string path) {
-        content = c;
-
-        gameObject.name = "body - " + path;
-        container.name = "container - " + path;
-        container.transform.localPosition = Vector3.zero;
-        container.transform.localPosition -= new Vector3(content.w / 2, -(content.h / 2), 0) * scale;
-
-        frameRate = content.fr;
-        totalFrames = content.op;
-
-        time = 0;
-        frame = 0;
-
-        for (int i = 0; i < layers.Length; i++) layers[i].UpdateLayersWithContent(content.layers[i]);
-
-        loop = true;
-        Play();
+        public Transform FindLayer(string n) {
+            for (int i = 0; i < layers.Length; i++)
+                if (n == layers[i].content.nm)
+                    return layers[i].transform;
+            return null;
+        }
+        
     }
 }

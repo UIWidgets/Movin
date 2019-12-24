@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using Color = UnityEngine.Color;
 
-namespace u.movin {
+namespace Unity.UIWidgets.Movin {
     public class BezierPathSegment {
         public Vector2 P0;
         public Vector2 P1;
@@ -30,15 +30,10 @@ namespace u.movin {
     }
 
     public class MovinShape {
-        public GameObject gameObject;
-        public Transform transform => gameObject.transform;
+        public Transform transform;
 
         public MovinShapeSlave[] slaves;
         public BodymovinShape content;
-        public Mesh mesh;
-        public MeshFilter filter;
-        public MeshRenderer renderer;
-        public SortingGroup sorting;
 
         public BodyPoint[] points;
         public BodyPoint[] startPoints;
@@ -96,21 +91,9 @@ namespace u.movin {
 
 
             /* GAMEOBJECT, MESH, MATERIAL */
-
-            gameObject = new GameObject(content.item.ty + " pts: " + points.Length + "  closed: " + closed);
+            transform = new RectTransform();
             transform.SetParent(parent, false);
             transform.localPosition = -layer.content.anchorPoint;
-
-            mesh = new Mesh();
-            filter = gameObject.AddComponent<MeshFilter>();
-            filter.mesh = mesh;
-
-            renderer = gameObject.AddComponent<MeshRenderer>();
-            renderer.material = new Material(Shader.Find("Sprites/Default"));
-            //renderer.material = new Material(Shader.Find("Unlit/Vector"));
-
-            sorting = gameObject.AddComponent<SortingGroup>();
-            sorting.sortingOrder = movin.sort + layer.sort;
 
 
             /* SETUP VECTOR */
@@ -217,14 +200,6 @@ namespace u.movin {
                 segs[i] = final;
             }
 
-
-            /* READOUT */
-
-            //foreach (BezierPathSegment s in segs)
-            //{
-            //    Debug.Log("P0: " + s.P0 + "  P1: " + s.P1 + "  P2: " + s.P2);
-            //}
-
             return segs;
         }
 
@@ -244,13 +219,6 @@ namespace u.movin {
 
 
         public void UpdateOpacity(float opacity) {
-            if (!Application.isPlaying) return;
-            if (renderer == null) return;
-
-            Color c = renderer.material.color;
-            c.a = opacity * 0.01f;
-
-            renderer.material.color = c;
         }
 
 

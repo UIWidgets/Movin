@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace u.movin {
+namespace Unity.UIWidgets.Movin {
     public class MovinLayer {
         public Vector3 positionOffset = Vector3.zero;
 
@@ -222,11 +222,6 @@ namespace u.movin {
             if (opacityAnimated) SetKeyframe(ref mopacity, content.opacitySets, 0);
 
             for (int i = 0; i < shapes.Length; i++) shapes[i].ResetKeyframes();
-        }
-
-
-        public void ShapesActive(bool on) {
-            for (int i = 0; i < shapes.Length; i++) shapes[i].gameObject.SetActive(@on);
         }
 
 

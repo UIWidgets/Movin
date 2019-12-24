@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace u.movin
+namespace Unity.UIWidgets.Movin
 {
     public static class Ease
     {
