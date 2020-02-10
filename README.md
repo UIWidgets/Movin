@@ -21,7 +21,7 @@ U.Movin是一个C#版本的Lottie解析库，将Lottie格式的JSON文件解析�
 
 解析Lottie文件的结果是得到一个`BodymovinContent`对象。BodyMovin中的数据类型结构如下图所示(图中三叉代替箭头表示包含一个数组)
 
-![](https://github.com/UIWidgets/Movin/blob/master/U.Movin-Bodymovin-Classes.png)
+![](https://github.com/UIWidgets/Movin/blob/master/U.Movin-Bodymovin-Classes.png?raw=true)
 
 一个`BodymovinContent`中，除了一些基本参数外，就是一个`BodymovinLayer`数组。一个`BodymovinLayer`又包含一个`BodymovinShape`数组，`BodymovinShape`包含`BodymovinShapeItem`数组和`BodymovinShapePath`数组。这其中每一个层级都包含`BodymovinAnimatedProperties`，即描述动画的数据。
 
@@ -31,7 +31,7 @@ U.Movin是通过把上述的每一个类型对象转换成一个GameObject，借
 
 针对上述层级中的每一层，U.Movin也定义了一个类型来进行Bodymovin类型到Unity游戏对象之间的转换。如下图所示，每一个类型都包含一个`content`成员，用来保存一个对应这一层的数据。
 
-![](https://github.com/UIWidgets/Movin/blob/master/U.Movin-Movin-Classes.png)
+![](https://github.com/UIWidgets/Movin/blob/master/U.Movin-Movin-Classes.png?raw=true)
 
 每个对象也会包含一个GameObject的引用，以及对这个GameObject的Transform组件的引用。
 
@@ -52,7 +52,7 @@ for (int i = 0; i < layers.Length; i++) {
 
 下图是一个示例，表示Lottie的解析结束后，各`MovinLayer`和`MovinShape`的Transform之间形成的树结构的样子。
 
-![](https://github.com/UIWidgets/Movin/blob/master/U.Movin-Layer-Tree.png)
+![](https://github.com/UIWidgets/Movin/blob/master/U.Movin-Layer-Tree.png?raw=true)
 
 #### 动画
 
